@@ -28,8 +28,9 @@ impl ColorPalette {
     // Based in part on
     // https://github.com/fifoc/encoder/blob/master/fifEncoder.go#L9
     pub fn simplify(&mut self, color: u32) -> u32 {
-        if self.simplification_cache.contains_key(*color) {
-            return self.simplification_cache.get(*color).expect("Ah yes, contains then ceases containing.");
+        if self.simplification_cache.contains_key(&color) {
+            println!("Used color cache!");
+            return *self.simplification_cache.get(&color).expect("Ah yes, contains then ceases containing.");
         }
 
         let mut closest_delta: i64 = MAX;
@@ -37,12 +38,12 @@ impl ColorPalette {
 
         let (r, g, b) = split_colors(color);
 
-        for iterColor in self.pal.iter() {
-            if iterColor == color {
-                self.simplification_cache.insert(*color, *color);
-                return *color;
+        for iter_color in self.pal.iter() {
+            if iter_color == &color {
+                self.simplification_cache.insert(color, color);
+                return color;
             } else {
-                let (p_r, p_g, p_b) = split_colors(*iterColor);
+                let (p_r, p_g, p_b) = split_colors(*iter_color);
                 let factor_r = (p_r as i64) - (r as i64);
                 let factor_g = (p_g as i64) - (g as i64);
                 let factor_b = (p_b as i64) - (b as i64);
@@ -50,12 +51,12 @@ impl ColorPalette {
                 let delta = (factor_r * factor_r) + (factor_g * factor_g) + (factor_b * factor_b);
                 if delta < closest_delta {
                     closest_delta = delta;
-                    pick = *iterColor;
+                    pick = *iter_color;
                 }
             }
         }
 
-        self.simplification_cache.insert(*color, pick);
+        self.simplification_cache.insert(color, pick);
         return pick;
     }
 }
@@ -64,7 +65,7 @@ impl ColorPalette {
 // Might not be the most optimal but works as a test and I have experience with it
 // -Rph
 pub fn generate_palette_256() -> ColorPalette {
-    let mut hm : HashMap<u32, u32> = HashMap::new();
+    let hm : HashMap<u32, u32> = HashMap::new();
     let mut c = ColorPalette{ pal: vec![], simplification_cache: hm };
 
     // https://github.com/fifoc/encoder/blob/master/paletteGenerator.go#L4
