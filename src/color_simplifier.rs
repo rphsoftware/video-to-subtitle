@@ -7,6 +7,9 @@
 //
 // Other way around just bitshift in the other direction
 
+// SOURCES FOR COLOR SIMPLIFICATION ALGHORITMS:
+// https://github.com/fifoc/encoder
+
 pub struct ColorPalette {
     pal: Vec<u32>
 }
