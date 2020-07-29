@@ -28,9 +28,10 @@ impl ColorPalette {
     // Based in part on
     // https://github.com/fifoc/encoder/blob/master/fifEncoder.go#L9
     pub fn simplify(&mut self, color: u32) -> u32 {
-        if self.simplification_cache.contains_key(&color) {
-            println!("Used color cache!");
-            return *self.simplification_cache.get(&color).expect("Ah yes, contains then ceases containing.");
+        if let Some(cached) = self.simplification_cache.get(&color) {
+            // TODO: Remove this debug message
+            println!("DEBUG: Used color cache!");
+            return *cached;
         }
 
         let mut closest_delta: i64 = MAX;
