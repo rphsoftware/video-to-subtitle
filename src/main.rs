@@ -1,5 +1,8 @@
+mod color_utils;
+mod color_simplifier;
 mod ass_emitter;
 
 fn main() {
-    println!("Hello, world!");
+    println!("{:?}", color_utils::join_colors(255, 128, 64));
+    println!("{:?}", color_utils::split_colors(0xFF8833));
 }

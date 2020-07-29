@@ -12,7 +12,7 @@
 pub struct SubtitleLine {
     background: u32,
     foreground: u32,
-    text: str,
+    text: *const str,
     start: u64,
     end: u64
 }
@@ -20,4 +20,8 @@ pub struct SubtitleLine {
 pub struct Subtitles {
     lines: Vec<SubtitleLine>,
     length: u64
+}
+
+impl SubtitleLine {
+
 }
