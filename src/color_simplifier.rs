@@ -10,8 +10,9 @@
 // SOURCES FOR COLOR SIMPLIFICATION ALGHORITMS:
 // https://github.com/fifoc/encoder
 
-use crate::color_utils::join_colors;
+use crate::color_utils::{join_colors, split_colors};
 use std::collections::HashMap;
+use std::i64::MAX;
 
 pub struct ColorPalette {
     pub pal: Vec<u32>,
@@ -22,6 +23,41 @@ impl ColorPalette {
     fn add(&mut self, r: u8, g: u8, b: u8) {
         self.pal.push(join_colors(r, g, b));
     }
+
+    // This function returns the closest* color in the palette to the parameter
+    // Based in part on
+    // https://github.com/fifoc/encoder/blob/master/fifEncoder.go#L9
+    pub fn simplify(&mut self, color: u32) -> u32 {
+        if self.simplification_cache.contains_key(*color) {
+            return self.simplification_cache.get(*color).expect("Ah yes, contains then ceases containing.");
+        }
+
+        let mut closest_delta: i64 = MAX;
+        let mut pick : u32 = 0;
+
+        let (r, g, b) = split_colors(color);
+
+        for iterColor in self.pal.iter() {
+            if iterColor == color {
+                self.simplification_cache.insert(*color, *color);
+                return *color;
+            } else {
+                let (p_r, p_g, p_b) = split_colors(*iterColor);
+                let factor_r = i64(i64(p_r) - i64(r));
+                let factor_g = i64(i64(p_g) - i64(g));
+                let factor_b = i64(i64(p_b) - i64(b));
+
+                let delta = (factor_r * factor_r) + (factor_g * factor_g) + (factor_b * factor_b);
+                if delta < closest_delta {
+                    closest_delta = delta;
+                    pick = *iterColor;
+                }
+            }
+        }
+
+        self.simplification_cache.insert(*color, pick);
+        return pick;
+    }
 }
 
 // Basic 256 color palette, the same one I used in my FIF encoder.
@@ -30,6 +66,7 @@ impl ColorPalette {
 pub fn generate_palette_256() -> ColorPalette {
     let mut hm : HashMap<u32, u32> = HashMap::new();
     let mut c = ColorPalette{ pal: vec![], simplification_cache: hm };
+
     // https://github.com/fifoc/encoder/blob/master/paletteGenerator.go#L4
     let red : [u8; 6] = [0x00, 0x33, 0x66, 0x99, 0xCC, 0xFF];
     let green : [u8; 8] = [0x00, 0x24, 0x49, 0x6D, 0x92, 0xB6, 0xDB, 0xFF];
@@ -50,3 +87,4 @@ pub fn generate_palette_256() -> ColorPalette {
 
     return c;
 }
+
