@@ -43,9 +43,9 @@ impl ColorPalette {
                 return *color;
             } else {
                 let (p_r, p_g, p_b) = split_colors(*iterColor);
-                let factor_r = i64(i64(p_r) - i64(r));
-                let factor_g = i64(i64(p_g) - i64(g));
-                let factor_b = i64(i64(p_b) - i64(b));
+                let factor_r = (p_r as i64) - (r as i64);
+                let factor_g = (p_g as i64) - (g as i64);
+                let factor_b = (p_b as i64) - (b as i64);
 
                 let delta = (factor_r * factor_r) + (factor_g * factor_g) + (factor_b * factor_b);
                 if delta < closest_delta {
