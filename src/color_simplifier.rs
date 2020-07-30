@@ -14,11 +14,13 @@ use crate::color_utils::{join_colors, split_colors};
 use std::collections::HashMap;
 use std::i64::MAX;
 
+#[allow(dead_code)]
 pub struct ColorPalette {
     pub pal: Vec<u32>,
     simplification_cache: HashMap<u32, u32>
 }
 
+#[allow(dead_code)]
 impl ColorPalette {
     fn add(&mut self, r: u8, g: u8, b: u8) {
         self.pal.push(join_colors(r, g, b));
@@ -29,8 +31,9 @@ impl ColorPalette {
     // https://github.com/fifoc/encoder/blob/master/fifEncoder.go#L9
     pub fn simplify(&mut self, color: u32) -> u32 {
         if let Some(cached) = self.simplification_cache.get(&color) {
-            // TODO: Remove this debug message
+            #[cfg(debug_assertions)]
             println!("DEBUG: Used color cache!");
+
             return *cached;
         }
 
@@ -65,6 +68,8 @@ impl ColorPalette {
 // Basic 256 color palette, the same one I used in my FIF encoder.
 // Might not be the most optimal but works as a test and I have experience with it
 // -Rph
+
+#[allow(dead_code)]
 pub fn generate_palette_256() -> ColorPalette {
     let hm : HashMap<u32, u32> = HashMap::new();
     let mut c = ColorPalette{ pal: vec![], simplification_cache: hm };

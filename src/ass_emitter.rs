@@ -8,7 +8,7 @@
 // b = color & 0xFF
 //
 // Other way around just bitshift in the other direction
-
+#[allow(dead_code)]
 pub struct SubtitleLine {
     background: u32,
     foreground: u32,
@@ -17,11 +17,13 @@ pub struct SubtitleLine {
     end: u64
 }
 
+#[allow(dead_code)]
 pub struct Subtitles {
     lines: Vec<SubtitleLine>,
     length: u64
 }
 
+#[allow(dead_code)]
 impl SubtitleLine {
 
 }
