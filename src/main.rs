@@ -1,3 +1,5 @@
+use crate::ass_emitter::Glyph;
+
 mod color_utils;
 mod color_simplifier;
 mod ass_emitter;
@@ -16,6 +18,12 @@ fn main() {
         println!("{}", pal.simplify(0xEEEEEE));
         println!("{}", pal.simplify(0xEEEEEE));
         println!("{}", pal.simplify(0xEEEEEE));
+
+        let mut a = Glyph::new();
+        a.set_pixel(1, 3, true);
+        a.set_pixel(0, 1, true);
+        a.set_fg(0x0FFF00);
+        println!("{}", a.to_ass_string());
     }
 
     #[cfg(not(debug_assertions))]
