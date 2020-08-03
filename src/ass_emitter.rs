@@ -16,8 +16,13 @@ pub struct Glyph {
     glyph: u8
 }
 
-static GLYPH_MASKS:   [u8; 8] = [0x01, 0x08, 0x02, 0x10, 0x04, 0x20, 0x40, 0x80];
+pub struct Line {
+    x: u32,
+    y: u32,
+    glyphs: Vec<Glyph>
+}
 
+static GLYPH_MASKS:   [u8; 8] = [0x01, 0x08, 0x02, 0x10, 0x04, 0x20, 0x40, 0x80];
 
 impl Glyph {
     pub fn new() -> Glyph {
@@ -69,5 +74,39 @@ impl Glyph {
 
     pub fn set_fg(&mut self, col: u32) {
         self.fg_color = col
+    }
+}
+
+impl Line {
+    pub fn new(width: usize) -> Line {
+        let mut l = Line{
+            x: 0,
+            y: 0,
+            glyphs: Vec::with_capacity(width / 2)
+        };
+
+        // Pre-allocate all glyphs
+        for _ in 0..(width / 2) {
+            l.glyphs.push(Glyph::new());
+        }
+
+        l
+    }
+
+    pub fn get_glyph(&mut self, n : usize) -> Option<&mut Glyph> {
+        return self.glyphs.get_mut(n);
+    }
+
+    pub fn set_glyph(&mut self, n : usize, g : Glyph) {
+        self.glyphs[n] = g;
+    }
+
+    pub fn to_ass_string(&mut self) -> String {
+        let mut base = String::with_capacity(self.glyphs.len() * 29);
+        for i in 0..(self.glyphs.len()) {
+            base.push_str(&*self.glyphs[i].to_ass_string())
+        }
+
+        return base;
     }
 }

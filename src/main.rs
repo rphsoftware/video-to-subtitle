@@ -1,4 +1,4 @@
-use crate::ass_emitter::Glyph;
+use crate::ass_emitter::{Glyph, Line};
 
 mod color_utils;
 mod color_simplifier;
@@ -24,8 +24,10 @@ fn main() {
         a.set_pixel(0, 1, true);
         a.set_fg(0x0FFF00);
         println!("{}", a.to_ass_string());
-    }
 
-    #[cfg(not(debug_assertions))]
-    println!("frog")
+        let mut b = Line::new(32);
+        let mut z = b.get_glyph(10).expect("Frog");
+        z.set_pixel(1, 2, true);
+        println!("{}", b.to_ass_string());
+    }
 }
