@@ -29,5 +29,7 @@ fn main() {
         let mut z = b.get_glyph(10).expect("Frog");
         z.set_pixel(1, 2, true);
         println!("{}", b.to_ass_string());
+
+        println!("{}", include_str!("font"));
     }
 }
