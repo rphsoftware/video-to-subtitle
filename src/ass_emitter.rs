@@ -46,7 +46,7 @@ impl Glyph {
     }
 
     pub fn to_ass_string(&mut self) -> String {
-        let mut base = String::with_capacity(29);
+        let mut base = String::with_capacity(40);
         base.push_str("{\\1c&H");
 
         let (r, g, b) = color_utils::split_colors(self.fg_color);
@@ -102,7 +102,7 @@ impl Line {
     }
 
     pub fn to_ass_string(&mut self) -> String {
-        let mut base = String::with_capacity(self.glyphs.len() * 29);
+        let mut base = String::with_capacity(self.glyphs.len() * 40);
         for i in 0..(self.glyphs.len()) {
             base.push_str(&*self.glyphs[i].to_ass_string())
         }

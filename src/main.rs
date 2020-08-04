@@ -1,11 +1,18 @@
 use crate::ass_emitter::{Glyph, Line};
+use std::time::Instant;
+use crate::framebuffer::FrameBuffer;
+use rand;
+use rand::Rng;
+use std::fs::File;
 
+mod framebuffer;
 mod color_utils;
 mod color_simplifier;
 mod ass_emitter;
 
 fn main() {
     let mut pal = color_simplifier::generate_palette_256();
+    let mut rng = rand::thread_rng();
 
     // Therapist: The empty unsafe block isn't real, it can't hurt you
     // Empty unsafe block:
@@ -13,23 +20,25 @@ fn main() {
 
     #[cfg(debug_assertions)]
     {
-        println!("{}", pal.simplify(0xEEEEEE));
-        println!("{}", pal.simplify(0xEEEEEF));
-        println!("{}", pal.simplify(0xEEEEEE));
-        println!("{}", pal.simplify(0xEEEEEE));
-        println!("{}", pal.simplify(0xEEEEEE));
+        let mut fb = FrameBuffer::new(384, 216);
+        let decoder = png::Decoder::new(File::open("test2.png").unwrap());
+        let (info, mut reader) = decoder.read_info().unwrap();
 
-        let mut a = Glyph::new();
-        a.set_pixel(1, 3, true);
-        a.set_pixel(0, 1, true);
-        a.set_fg(0x0FFF00);
-        println!("{}", a.to_ass_string());
+        let mut buf = vec![0; info.buffer_size()];
 
-        let mut b = Line::new(32);
-        let mut z = b.get_glyph(10).expect("Frog");
-        z.set_pixel(1, 2, true);
-        println!("{}", b.to_ass_string());
+        reader.next_frame(&mut buf).unwrap();
 
-        println!("{}", include_str!("font"));
+        for x in 0..384 {
+            for y in 0..216 {
+                let index = ((y * 384) * 4) + (x * 4);
+                fb.set_pixel(x, y, color_utils::join_colors(buf[index], buf[index+1], buf[index+2]));
+            }
+        }
+        fb.simplify(&mut pal);
+
+        for i in 0..54 {
+            println!("{}", fb.create_ass_line(i, 0, 500));
+        }
+
     }
 }

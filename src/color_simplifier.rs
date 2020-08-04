@@ -31,9 +31,6 @@ impl ColorPalette {
     // https://github.com/fifoc/encoder/blob/master/fifEncoder.go#L9
     pub fn simplify(&mut self, color: u32) -> u32 {
         if let Some(cached) = self.simplification_cache.get(&color) {
-            #[cfg(debug_assertions)]
-            println!("DEBUG: Used color cache!");
-
             return *cached;
         }
 
