@@ -2,10 +2,10 @@ use crate::framebuffer::FrameBuffer;
 use std::fs::File;
 use std::io::Write;
 use png::ColorType::RGB;
-use std::{io, env};
+use std::{env};
 use rayon::prelude::*;
-use std::path::PathBuf;
 use png::OutputInfo;
+use rand::AsByteSliceMut;
 
 mod framebuffer;
 mod color_utils;
@@ -53,14 +53,14 @@ fn generate_sub_file_header(x: u64, y: u64) -> String {
     return a;
 }
 
-fn worker(z: &str) {
+fn worker(z: &str, f: u64) {
     let l = z.split("/").collect::<Vec<&str>>();
     let l = l[1].split(".png").collect::<Vec<&str>>()[0].parse::<u64>().unwrap();
     println!("{}", l);
     convert_png(z.to_string(),
                 format!("{}.asstxt", z.to_string()),
-                l * 4,
-                4
+                l * f,
+                f
     );
 }
 
@@ -68,37 +68,7 @@ fn print_help() {
     println!("For usage visit github wiki.");
 }
 
-fn main() {/*
-    let mut z = std::fs::read_dir("frames").expect("Failed to read directory")
-        .map(|res| res.map(|e| e.path()))
-        .collect::<Result<Vec<_>, io::Error>>().expect("Froge");
-
-
-    z.par_iter().for_each(
-        |el| worker(el.to_str().expect("A"))
-    );*/
-/*
-        let mut f = File::create("output.ass").expect("Failed to create file!");
-        f.write(include_bytes!("top")).expect("Failed to write top");
-        f.write(format!("\nPlayResX: {}\nPlayResY: {}\n\n", 120, 67).as_bytes()).expect("Failed to exist");
-        f.write(include_bytes!("font")).expect("Failed to write font");
-        f.write("\n".as_bytes());
-
-        for i in 1..2248 {
-            let mut content = std::fs::read(format!("frames/{:09}.png.asstxt", i)).unwrap();
-            f.write(content.as_byte_slice_mut());
-
-            println!("{} / {}", i, 2248);
-        }
-*/
-    /*
-        CLI TODO:
-            -- GENERATE ENTIRE SUBS WITH DIALOGUE LINE
-                - ask for source image resolution
-            -- VIDEO MODE
-                - require ffmpeg
-                - generate entire subs only
-     */
+fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
@@ -109,7 +79,6 @@ fn main() {/*
             if args.len() < 7 {
                 return println!("Usage of image mode: <input AS PNG> <start centisecond> <end centisecond> <mode: f or p> <output file>");
             }
-            // arg[2]: input, arg[3]: start, arg[4]: end, arg[5]: mode, arg[6]: target
 
             let start = args[3].parse::<u64>().unwrap();
             let end = args[4].parse::<u64>().unwrap();
@@ -141,11 +110,49 @@ fn main() {/*
             return;
         },
         "v" => {
+            if args.len() < 5 {
+                return println!("Usage of video mode: <input directory> <How many multiples of 12.5 is the framerate [1, 2, 4, 8] supported> <amount of frames> <output file>");
+            }
 
-        },
-        "j" => {
+            let framerate = args[3].parse::<u64>().unwrap();
+            let framect = args[4].parse::<u64>().unwrap();
+            if framerate != 1 && framerate != 2 && framerate != 4 && framerate != 8 {
+                return println!("Bad framerate!");
+            }
 
-        },
+            let mut goodfr: u64 = 0;
+
+            if framerate == 1 { goodfr = 8; }
+            if framerate == 2 { goodfr = 4; }
+            if framerate == 4 { goodfr = 2; }
+            if framerate == 8 { goodfr = 1; }
+
+            let mut zz : Vec<String> = Vec::with_capacity(framect as usize);
+            for i in 1..framect + 1 {
+                zz.push(format!("{}/{:09}.png", args[2], i))
+            }
+
+            zz.par_iter().for_each(
+                |el| worker(el.as_str(), goodfr)
+            );
+
+            let decoder = png::Decoder::new(File::open(format!("{}/{:09}.png", args[2], 1)).unwrap());
+            let (info, _) = decoder.read_info().unwrap();
+
+            let mut f = File::create(&*args[5]).expect("Failed to create file!");
+            f.write(include_bytes!("top")).expect("Failed to write top");
+            f.write(format!("\nPlayResX: {}\nPlayResY: {}\n\n", info.width / 4, info.height / 4).as_bytes()).expect("Failed to exist");
+            f.write(include_bytes!("font")).expect("Failed to write font");
+            f.write("\n".as_bytes()).expect("Failed to write newline");
+
+            for i in 1..framect + 1 {
+                let mut content = std::fs::read(format!("{}/{:09}.png.asstxt", args[2], i)).unwrap();
+                std::fs::remove_file(format!("{}/{:09}.png.asstxt", args[2], i)).unwrap();
+                f.write(content.as_byte_slice_mut()).expect("Failed to write");
+
+                println!("{} / {}", i, framect);
+            }
+        }
         _ => {
             return print_help();
         }

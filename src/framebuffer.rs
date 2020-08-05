@@ -79,8 +79,9 @@ impl FrameBuffer {
         } else {
             let mut occurences : HashMap<u32, usize> = HashMap::with_capacity(8);
             for i in 0..8 {
-                if let Some(occount) = occurences.get(&pixval[i]) {
-                    occurences.insert(pixval[i], occount + 1);
+                if occurences.contains_key(&pixval[i]) {
+                    let cnt = *occurences.get(&pixval[i]).unwrap();
+                    occurences.insert(pixval[i], cnt + 1);
                 } else {
                     occurences.insert(pixval[i], 1);
                 }
