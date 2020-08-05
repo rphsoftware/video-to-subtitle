@@ -5,7 +5,6 @@ use png::ColorType::RGB;
 use std::{env};
 use rayon::prelude::*;
 use png::OutputInfo;
-use rand::AsByteSliceMut;
 
 mod framebuffer;
 mod color_utils;
@@ -146,9 +145,9 @@ fn main() {
             f.write("\n".as_bytes()).expect("Failed to write newline");
 
             for i in 1..framect + 1 {
-                let mut content = std::fs::read(format!("{}/{:09}.png.asstxt", args[2], i)).unwrap();
+                let content = std::fs::read(format!("{}/{:09}.png.asstxt", args[2], i)).unwrap();
                 std::fs::remove_file(format!("{}/{:09}.png.asstxt", args[2], i)).unwrap();
-                f.write(content.as_byte_slice_mut()).expect("Failed to write");
+                f.write(content.as_slice()).expect("Failed to write");
 
                 println!("{} / {}", i, framect);
             }
