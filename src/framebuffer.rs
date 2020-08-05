@@ -1,4 +1,3 @@
-use crate::color_simplifier::ColorPalette;
 use crate::ass_emitter::Glyph;
 use crate::color_utils;
 use std::collections::{HashSet, HashMap};
@@ -6,8 +5,7 @@ use std::iter::FromIterator;
 
 pub struct FrameBuffer {
     pixels: Vec<u32>,
-    width: usize,
-    height: usize
+    width: usize
 }
 
 pub fn create_timestamp_string(u: u64) -> String {
@@ -34,20 +32,13 @@ pub fn create_timestamp_string(u: u64) -> String {
 impl FrameBuffer {
     pub fn new(width: usize, height: usize) -> FrameBuffer {
         FrameBuffer{
-            pixels: vec![0; (width * height)],
-            width,
-            height
+            pixels: vec![0; width * height],
+            width
         }
     }
 
     pub fn set_pixel(&mut self, x: usize, y: usize, value: u32) {
         self.pixels[(y * self.width) + x] = value;
-    }
-
-    pub fn simplify(&mut self, pal: &mut ColorPalette) {
-        for elem in self.pixels.iter_mut() {
-            *elem = pal.simplify(*elem);
-        }
     }
 
     pub fn create_glyph(&mut self, x: usize, y: usize) -> Glyph {
@@ -71,7 +62,7 @@ impl FrameBuffer {
         }
 
         // https://github.com/fifoc/encoder/blob/master/fifSegment.go#L101
-        let mut colors = Vec::from_iter(colors);
+        let colors = Vec::from_iter(colors);
 
         if colors.len() == 1 {
             g.set_bg(colors[0]);
@@ -153,9 +144,5 @@ impl FrameBuffer {
         }
 
         return z;
-    }
-
-    pub fn raw(&mut self) { // This function likes it raw
-        println!("{:?}", self.pixels);
     }
 }
