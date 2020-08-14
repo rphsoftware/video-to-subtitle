@@ -1,7 +1,4 @@
-use crate::ass_emitter::Glyph;
 use crate::color_utils;
-use std::collections::{HashSet, HashMap};
-use std::iter::FromIterator;
 
 pub struct FrameBuffer {
     pixels: Vec<u32>,
@@ -41,93 +38,16 @@ impl FrameBuffer {
         self.pixels[(y * self.width) + x] = value;
     }
 
-    pub fn create_glyph(&mut self, x: usize, y: usize) -> Glyph {
-        let mut g = Glyph::new();
-        let mut colors : HashSet<u32> = HashSet::with_capacity(8);
-        let mut pixval : Vec<u32> = Vec::with_capacity(8);
+    pub fn create_vector_string(&mut self, x: usize, y: usize) -> String {
+        let mut base = String::with_capacity(50);
+        base.push_str("{\\c&");
+        let (r, g, b) = color_utils::split_colors(self.pixels[(y * self.width) + x]);
+        base.push_str(&*format!("{:01$x}", b, 2));
+        base.push_str(&*format!("{:01$x}", g, 2));
+        base.push_str(&*format!("{:01$x}", r, 2));
+        base.push_str("&}{\\p1}m 0 0 l 1 0 1 1 0 1 {\\p0}");
 
-        let base = (y * self.width * 4) + (x * 2);
-
-        pixval.push(self.pixels[base]);
-        pixval.push(self.pixels[base + 1]);
-        pixval.push(self.pixels[base + self.width]);
-        pixval.push(self.pixels[base + self.width + 1]);
-        pixval.push(self.pixels[base + (self.width * 2)]);
-        pixval.push(self.pixels[base + (self.width * 2) + 1]);
-        pixval.push(self.pixels[base + (self.width * 3)]);
-        pixval.push(self.pixels[base + (self.width * 3) + 1]);
-
-        for i in 0..8 {
-            colors.insert(pixval[i]);
-        }
-
-        // https://github.com/fifoc/encoder/blob/master/fifSegment.go#L101
-        let colors = Vec::from_iter(colors);
-
-        if colors.len() == 1 {
-            g.set_bg(colors[0]);
-            g.set_fg(colors[0]);
-        } else if colors.len() == 2 {
-            g.set_bg(colors[0]);
-            g.set_fg(colors[1]);
-
-            for i in 0..8 {
-                if pixval[i] == colors[1] {
-                    g.set_pixel((i & 0x1) as u8, (i >> 1) as u8, true);
-                }
-            }
-        } else {
-            let mut occurences : HashMap<u32, usize> = HashMap::with_capacity(8);
-            for i in 0..8 {
-                if occurences.contains_key(&pixval[i]) {
-                    let cnt = *occurences.get(&pixval[i]).unwrap();
-                    occurences.insert(pixval[i], cnt + 1);
-                } else {
-                    occurences.insert(pixval[i], 1);
-                }
-            }
-
-            let mut smallest_magic = std::f64::MAX;
-            let mut largest_magic = std::f64::MIN;
-            let mut smallest_col: u32  = 0;
-            let mut largest_col: u32  = 0;
-
-            for (oc, _) in occurences.iter() {
-                let lum = color_utils::calculate_magic(*oc);
-
-                if lum > largest_magic {
-                    largest_magic = lum;
-                    largest_col = *oc;
-                }
-
-                if lum < smallest_magic {
-                    smallest_magic = lum;
-                    smallest_col = *oc;
-                }
-            }
-
-            g.set_bg(smallest_col);
-            g.set_fg(largest_col);
-
-            for i in 0..8 {
-                if pixval[i] == smallest_col {
-                    // noop
-                } else if pixval[i] == largest_col {
-                    g.set_pixel((i & 0x1) as u8, (i >> 1) as u8, true);
-                } else {
-                    let magic = color_utils::calculate_magic(pixval[i]);
-
-                    let sdelta = (smallest_magic - magic).abs();
-                    let ldelta = (largest_magic - magic).abs();
-
-                    if ldelta < sdelta {
-                        g.set_pixel((i & 0x1) as u8, (i >> 1) as u8, true);
-                    }
-                }
-            }
-        }
-
-        g
+        return base;
     }
 
     pub fn create_ass_line(&mut self, l: usize, start: u64, len: u64) -> String {
@@ -136,12 +56,12 @@ impl FrameBuffer {
         z.push_str(&*create_timestamp_string(start));
         z.push_str(",");
         z.push_str(&*create_timestamp_string(start + len));
-        z.push_str(",Default,,0,0,0,,{\\an5}{\\pos(");
-        z.push_str(&*format!("{},{}", self.width / 8, l));
-        z.push_str(".5)}");
+        z.push_str(",Default,,0,0,0,,{\\pos(0");
+        z.push_str(&*format!(",{}", l));
+        z.push_str(")}");
 
-        for i in 0..(self.width / 2) {
-            z.push_str(&*self.create_glyph(i, l).to_ass_string());
+        for i in 0..self.width {
+            z.push_str(&*self.create_vector_string(i, l));
         }
 
         return z;

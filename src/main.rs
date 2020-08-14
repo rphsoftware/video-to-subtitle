@@ -8,7 +8,6 @@ use png::OutputInfo;
 
 mod framebuffer;
 mod color_utils;
-mod ass_emitter;
 
 fn convert_png(input: String, output: String, at: u64, size: u64) -> OutputInfo {
     let decoder = png::Decoder::new(File::open(input).unwrap());
@@ -32,7 +31,7 @@ fn convert_png(input: String, output: String, at: u64, size: u64) -> OutputInfo 
 
     let mut f = File::create(output).expect("Failed to create file!");
 
-    for i in 0..(info.height as usize) / 4 {
+    for i in 0..(info.height as usize) {
         f.write(fb.create_ass_line(i, at, size).as_bytes()).expect("Failed to write");
         f.write("\n".as_bytes()).expect("Failed to write");
     }
@@ -87,7 +86,7 @@ fn main() {
             if args[5] == "f" {
                 let data = std::fs::read("_________tmp.asstxt").unwrap();
                 let mut f = File::create(&*args[6]).expect("Frog");
-                f.write(generate_sub_file_header((iminfo.width / 4) as u64, (iminfo.height / 4) as u64).as_ref()).expect("Failed to write");
+                f.write(generate_sub_file_header((iminfo.width) as u64, (iminfo.height) as u64).as_ref()).expect("Failed to write");
                 f.write(&*data).expect("Failed to write");
                 f.flush().expect("Failed to flush");
 
@@ -140,7 +139,7 @@ fn main() {
 
             let mut f = File::create(&*args[5]).expect("Failed to create file!");
             f.write(include_bytes!("top")).expect("Failed to write top");
-            f.write(format!("\nPlayResX: {}\nPlayResY: {}\n\n", info.width / 4, info.height / 4).as_bytes()).expect("Failed to exist");
+            f.write(format!("\nPlayResX: {}\nPlayResY: {}\n\n", info.width, info.height).as_bytes()).expect("Failed to exist");
             f.write(include_bytes!("font")).expect("Failed to write font");
             f.write("\n".as_bytes()).expect("Failed to write newline");
 
