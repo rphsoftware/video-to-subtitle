@@ -49,17 +49,22 @@ impl Glyph {
         base.push_str(&*format!("{:01$x}", r, 2));
         base.push_str("&}");
 
-        base.push_str("{\\4c&H");
+      /*  base.push_str("{\\4c&H");
 
         let (r, g, b) = color_utils::split_colors(self.bg_color);
         base.push_str(&*format!("{:01$x}", b, 2));
         base.push_str(&*format!("{:01$x}", g, 2));
         base.push_str(&*format!("{:01$x}", r, 2));
         base.push_str("&}");
-
+*/
         base.push_str(&*std::char::from_u32(0x2800 + (self.glyph as u32)).expect("Something went horribly wrong").to_string());
 
         return base;
+    }
+
+    pub fn invert(&mut self) {
+        self.fg_color = self.bg_color;
+        self.glyph = !self.glyph;
     }
 
     pub fn set_bg(&mut self, col: u32) {

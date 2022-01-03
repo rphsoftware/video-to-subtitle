@@ -10,6 +10,27 @@ mod framebuffer;
 mod color_utils;
 mod ass_emitter;
 
+pub fn create_timestamp_string(u: u64) -> String {
+    let mut u = u;
+
+    let mut z = String::with_capacity(16);
+    // Centiseconds
+    let centiseconds = u % 100;
+    u = u / 100;
+
+    let seconds = u % 60;
+    u = u / 60;
+
+    let minutes = u % 60;
+    u = u / 60;
+
+    let hours = u;
+
+    z.push_str(&*format!("{:01}:{:02}:{:02}.{:02}", hours, minutes, seconds, centiseconds));
+
+    return z;
+}
+
 fn convert_png(input: String, output: String, at: u64, size: u64) -> OutputInfo {
     let decoder = png::Decoder::new(File::open(input).unwrap());
     let (info, mut reader) = decoder.read_info().unwrap();
@@ -32,10 +53,35 @@ fn convert_png(input: String, output: String, at: u64, size: u64) -> OutputInfo 
 
     let mut f = File::create(output).expect("Failed to create file!");
 
+    let mut z = String::with_capacity(4096);
+    z.push_str("Dialogue: 0,");
+    z.push_str(&*create_timestamp_string(at));
+    z.push_str(",");
+    z.push_str(&*create_timestamp_string(at + size));
+    z.push_str(",Default,,0,0,0,,{\\an7}{\\pos(");
+    z.push_str(&*format!("{},{}", 0, 0));
+    z.push_str(")}");
+
+    f.write(z.as_bytes()).expect("Amogus");
+
     for i in 0..(info.height as usize) / 4 {
         f.write(fb.create_ass_line(i, at, size).as_bytes()).expect("Failed to write");
-        f.write("\n".as_bytes()).expect("Failed to write");
+        f.write("\\N".as_bytes()).expect("Failed to write");
     }
+
+    f.write("\n".as_bytes()).expect("Amogus");
+
+
+    f.write(z.as_bytes()).expect("Amogus");
+
+    for i in 0..(info.height as usize) / 4 {
+        f.write(fb.create_inverted_ass_line(i, at, size).as_bytes()).expect("Failed to write");
+        f.write("\\N".as_bytes()).expect("Failed to write");
+    }
+
+    f.write("\n".as_bytes()).expect("Amogus");
+
+
 
     f.flush().expect("Failed to flush");
 
@@ -58,7 +104,7 @@ fn worker(z: &str, f: u64) {
     println!("{}", l);
     convert_png(z.to_string(),
                 format!("{}.asstxt", z.to_string()),
-                l * f,
+                (l - 1) * f,
                 f
     );
 }
@@ -140,7 +186,7 @@ fn main() {
 
             let mut f = File::create(&*args[5]).expect("Failed to create file!");
             f.write(include_bytes!("top")).expect("Failed to write top");
-            f.write(format!("\nPlayResX: {}\nPlayResY: {}\n\n", info.width / 4, info.height / 4).as_bytes()).expect("Failed to exist");
+            f.write(format!("\nPlayResX: {}\nPlayResY: {}\n\n", (info.width / 4), (info.height / 4)).as_bytes()).expect("Failed to exist");
             f.write(include_bytes!("font")).expect("Failed to write font");
             f.write("\n".as_bytes()).expect("Failed to write newline");
 
