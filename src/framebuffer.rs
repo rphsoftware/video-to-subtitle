@@ -134,21 +134,27 @@ impl FrameBuffer {
         g
     }
 
-    pub fn create_ass_line(&mut self, l: usize, start: u64, len: u64) -> String {
+    pub fn create_ass_line(&mut self, l: usize) -> String {
         let mut z = String::with_capacity(self.width * 60);
+        let mut last_fg = u32::MAX;
 
         for i in 0..(self.width / 2) {
-            z.push_str(&*self.create_glyph(i, l, false).to_ass_string());
+            let mut glyph = self.create_glyph(i, l, false);
+            z.push_str(&*glyph.to_ass_string(last_fg));
+            last_fg = glyph.get_fg();
         }
 
         return z;
     }
 
-    pub fn create_inverted_ass_line(&mut self, l: usize, start: u64, len: u64) -> String {
+    pub fn create_inverted_ass_line(&mut self, l: usize) -> String {
         let mut z = String::with_capacity(self.width * 60);
+        let mut last_fg = u32::MAX;
 
         for i in 0..(self.width / 2) {
-            z.push_str(&*self.create_glyph(i, l, true).to_ass_string());
+            let mut glyph = self.create_glyph(i, l, true);
+            z.push_str(&*glyph.to_ass_string(last_fg));
+            last_fg = glyph.get_fg();
         }
 
         return z;

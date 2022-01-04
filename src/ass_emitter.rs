@@ -39,16 +39,18 @@ impl Glyph {
         }
     }
 
-    pub fn to_ass_string(&mut self) -> String {
+    pub fn to_ass_string(&mut self, lastFg: u32) -> String {
         let mut base = String::with_capacity(40);
-        base.push_str("{\\1c&H");
 
-        let (r, g, b) = color_utils::split_colors(self.fg_color);
-        base.push_str(&*format!("{:01$x}", b, 2));
-        base.push_str(&*format!("{:01$x}", g, 2));
-        base.push_str(&*format!("{:01$x}", r, 2));
-        base.push_str("&}");
+        if lastFg != self.fg_color {
+            base.push_str("{\\1c&H");
 
+            let (r, g, b) = color_utils::split_colors(self.fg_color);
+            base.push_str(&*format!("{:01$x}", b, 2));
+            base.push_str(&*format!("{:01$x}", g, 2));
+            base.push_str(&*format!("{:01$x}", r, 2));
+            base.push_str("&}");
+        }
       /*  base.push_str("{\\4c&H");
 
         let (r, g, b) = color_utils::split_colors(self.bg_color);
@@ -73,5 +75,9 @@ impl Glyph {
 
     pub fn set_fg(&mut self, col: u32) {
         self.fg_color = col
+    }
+
+    pub fn get_fg(&self) -> u32 {
+        return self.fg_color;
     }
 }

@@ -31,7 +31,7 @@ pub fn create_timestamp_string(u: u64) -> String {
     return z;
 }
 
-fn convert_png(input: String, output: String, at: u64, size: u64) -> OutputInfo {
+fn convert_png(input: String, output: String, bro: u64) -> OutputInfo {
     let decoder = png::Decoder::new(File::open(input).unwrap());
     let (info, mut reader) = decoder.read_info().unwrap();
     let mut fb = FrameBuffer::new(info.width as usize, info.height as usize);
@@ -54,28 +54,30 @@ fn convert_png(input: String, output: String, at: u64, size: u64) -> OutputInfo 
     let mut f = File::create(output).expect("Failed to create file!");
 
     let mut z = String::with_capacity(4096);
-    z.push_str("Dialogue: 0,");
-    z.push_str(&*create_timestamp_string(at));
-    z.push_str(",");
-    z.push_str(&*create_timestamp_string(at + size));
-    z.push_str(",Default,,0,0,0,,{\\an7}{\\pos(");
-    z.push_str(&*format!("{},{}", 0, 0));
-    z.push_str(")}");
+    z.push_str("Dialogue: ");
+    z.push_str(&*format!("{},", bro)); // ReadOrder
+    z.push_str("0,"); // Layer
+    z.push_str("Default,,0,0,0,,{\\an7}{\\pos(0,0)}"); // Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
     f.write(z.as_bytes()).expect("Amogus");
 
     for i in 0..(info.height as usize) / 4 {
-        f.write(fb.create_ass_line(i, at, size).as_bytes()).expect("Failed to write");
+        f.write(fb.create_ass_line(i).as_bytes()).expect("Failed to write");
         f.write("\\N".as_bytes()).expect("Failed to write");
     }
 
     f.write("\n".as_bytes()).expect("Amogus");
 
+    let mut z = String::with_capacity(4096);
+    z.push_str(&*format!("{},", bro + 1)); // ReadOrder
+    z.push_str("0,"); // Layer
+    z.push_str("Default,,0,0,0,,{\\an7}{\\pos(0,0)}"); // Style, Name, MarginL, MarginR, MarginV, Effect, Text
+
 
     f.write(z.as_bytes()).expect("Amogus");
 
     for i in 0..(info.height as usize) / 4 {
-        f.write(fb.create_inverted_ass_line(i, at, size).as_bytes()).expect("Failed to write");
+        f.write(fb.create_inverted_ass_line(i).as_bytes()).expect("Failed to write");
         f.write("\\N".as_bytes()).expect("Failed to write");
     }
 
@@ -102,11 +104,6 @@ fn worker(z: &str, f: u64) {
     let l = z.split("/").collect::<Vec<&str>>();
     let l = l[1].split(".png").collect::<Vec<&str>>()[0].parse::<u64>().unwrap();
     println!("{}", l);
-    convert_png(z.to_string(),
-                format!("{}.asstxt", z.to_string()),
-                (l - 1) * f,
-                f
-    );
 }
 
 fn print_help() {
@@ -120,37 +117,26 @@ fn main() {
         return print_help();
     }
     match args[1].as_str() {
+        "h" => {
+            let w = args[2].parse::<u64>().unwrap();
+            let h = args[3].parse::<u64>().unwrap();
+            println!("{}", generate_sub_file_header(w, h));
+            return;
+        },
         "i" => {
-            if args.len() < 7 {
-                return println!("Usage of image mode: <input AS PNG> <start centisecond> <end centisecond> <mode: f or p> <output file>");
+            if args.len() < 5 {
+                return println!("Usage of image mode: <input AS PNG> <base_readorder> <output file>");
             }
 
-            let start = args[3].parse::<u64>().unwrap();
-            let end = args[4].parse::<u64>().unwrap();
+            let bro = args[3].parse::<u64>().unwrap();
 
-            let iminfo = convert_png((&*args[2]).parse().unwrap(), "_________tmp.asstxt".parse().unwrap(), start, end - start);
+            let iminfo = convert_png((&*args[2]).parse().unwrap(), "_________tmp.asstxt".parse().unwrap(), bro);
 
-            if args[5] == "f" {
-                let data = std::fs::read("_________tmp.asstxt").unwrap();
-                let mut f = File::create(&*args[6]).expect("Frog");
-                f.write(generate_sub_file_header((iminfo.width / 4) as u64, (iminfo.height / 4) as u64).as_ref()).expect("Failed to write");
-                f.write(&*data).expect("Failed to write");
-                f.flush().expect("Failed to flush");
+            let data = std::fs::read("_________tmp.asstxt").unwrap();
+            let mut f = File::create(&*args[4]).expect("Frog");
+            f.write(&*data).expect("Failed to write");
+            f.flush().expect("Failed to flush");
 
-                std::fs::remove_file("_________tmp.asstxt").expect("Failed to delete");
-                return;
-            }
-            if args[5] == "p" {
-                let data = std::fs::read("_________tmp.asstxt").unwrap();
-                let mut f = File::create(&*args[6]).expect("Frog");
-                f.write(&*data).expect("Failed to write");
-                f.flush().expect("Failed to flush");
-
-                std::fs::remove_file("_________tmp.asstxt").expect("Failed to delete");
-                return;
-            }
-
-            println!("Invalid file mode!");
             std::fs::remove_file("_________tmp.asstxt").expect("Failed to delete");
             return;
         },
