@@ -1,6 +1,6 @@
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,BrailleBlock,1,&H00FFFFFF,&H00FFFF00,&H00000000,&H00000000,0,0,0,0,100,100,0,0,0,0,0,2,0,0,0,1
+Style: Default,BrailleBlock,100,&H00FFFFFF,&H00FFFF00,&H00000000,&H00000000,1,0,0,0,1,1,0,0,0,0,0,2,0,0,0,1
 
 [Fonts]
 fontname: BrailleBlockRegular_0.ttf

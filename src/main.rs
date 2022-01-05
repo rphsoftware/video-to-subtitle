@@ -10,27 +10,6 @@ mod framebuffer;
 mod color_utils;
 mod ass_emitter;
 
-pub fn create_timestamp_string(u: u64) -> String {
-    let mut u = u;
-
-    let mut z = String::with_capacity(16);
-    // Centiseconds
-    let centiseconds = u % 100;
-    u = u / 100;
-
-    let seconds = u % 60;
-    u = u / 60;
-
-    let minutes = u % 60;
-    u = u / 60;
-
-    let hours = u;
-
-    z.push_str(&*format!("{:01}:{:02}:{:02}.{:02}", hours, minutes, seconds, centiseconds));
-
-    return z;
-}
-
 fn convert_png(input: String, output: String, bro: u64) -> OutputInfo {
     let decoder = png::Decoder::new(File::open(input).unwrap());
     let (info, mut reader) = decoder.read_info().unwrap();
@@ -54,33 +33,27 @@ fn convert_png(input: String, output: String, bro: u64) -> OutputInfo {
     let mut f = File::create(output).expect("Failed to create file!");
 
     let mut z = String::with_capacity(4096);
-    z.push_str("Dialogue: ");
     z.push_str(&*format!("{},", bro)); // ReadOrder
     z.push_str("0,"); // Layer
     z.push_str("Default,,0,0,0,,{\\an7}{\\pos(0,0)}"); // Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
-    f.write(z.as_bytes()).expect("Amogus");
+    let mut zz = String::with_capacity(4096);
+    zz.push_str(&*format!("{},", bro + 1)); // ReadOrder
+    zz.push_str("0,"); // Layer
+    zz.push_str("Default,,0,0,0,,{\\an7}{\\pos(0,0)}"); // Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
     for i in 0..(info.height as usize) / 4 {
-        f.write(fb.create_ass_line(i).as_bytes()).expect("Failed to write");
-        f.write("\\N".as_bytes()).expect("Failed to write");
+        let (a1, a2) = fb.create_ass_line(i);
+        z.push_str(&*a1);
+        z.push_str("\\N");
+        zz.push_str(&*a2);
+        zz.push_str("\\N");
     }
 
+
+    f.write(z.as_bytes()).expect("Amogus");
     f.write("\n".as_bytes()).expect("Amogus");
-
-    let mut z = String::with_capacity(4096);
-    z.push_str(&*format!("{},", bro + 1)); // ReadOrder
-    z.push_str("0,"); // Layer
-    z.push_str("Default,,0,0,0,,{\\an7}{\\pos(0,0)}"); // Style, Name, MarginL, MarginR, MarginV, Effect, Text
-
-
-    f.write(z.as_bytes()).expect("Amogus");
-
-    for i in 0..(info.height as usize) / 4 {
-        f.write(fb.create_inverted_ass_line(i).as_bytes()).expect("Failed to write");
-        f.write("\\N".as_bytes()).expect("Failed to write");
-    }
-
+    f.write(zz.as_bytes()).expect("Amogus");
     f.write("\n".as_bytes()).expect("Amogus");
 
 

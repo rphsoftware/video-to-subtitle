@@ -41,7 +41,7 @@ impl FrameBuffer {
         self.pixels[(y * self.width) + x] = value;
     }
 
-    pub fn create_glyph(&mut self, x: usize, y: usize, invert: bool) -> Glyph {
+    pub fn create_glyph(&mut self, x: usize, y: usize) -> Glyph {
         let mut g = Glyph::new();
         let mut colors : HashSet<u32> = HashSet::with_capacity(8);
         let mut pixval : Vec<u32> = Vec::with_capacity(8);
@@ -127,36 +127,20 @@ impl FrameBuffer {
             }
         }
 
-        if (invert) {
-            g.invert();
-        }
-
         g
     }
 
-    pub fn create_ass_line(&mut self, l: usize) -> String {
+    pub fn create_ass_line(&mut self, l: usize) -> (String, String) {
         let mut z = String::with_capacity(self.width * 60);
-        let mut last_fg = u32::MAX;
+        let mut zz = String::with_capacity(self.width * 60);
 
         for i in 0..(self.width / 2) {
-            let mut glyph = self.create_glyph(i, l, false);
-            z.push_str(&*glyph.to_ass_string(last_fg));
-            last_fg = glyph.get_fg();
+            let mut glyph = self.create_glyph(i, l);
+            z.push_str(&*glyph.to_ass_string());
+            glyph.invert();
+            zz.push_str(&*glyph.to_ass_string());
         }
 
-        return z;
-    }
-
-    pub fn create_inverted_ass_line(&mut self, l: usize) -> String {
-        let mut z = String::with_capacity(self.width * 60);
-        let mut last_fg = u32::MAX;
-
-        for i in 0..(self.width / 2) {
-            let mut glyph = self.create_glyph(i, l, true);
-            z.push_str(&*glyph.to_ass_string(last_fg));
-            last_fg = glyph.get_fg();
-        }
-
-        return z;
+        return (z, zz);
     }
 }
